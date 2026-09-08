@@ -1,0 +1,78 @@
+name: Build & Release Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant Execute Permission to Gradle Wrapper
+        run: chmod +x gradlew
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Locate and Prepare APK
+        id: apk-prep
+        run: |
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "ERROR: APK not found!"
+            exit 1
+          fi
+          echo "Found APK at: $APK_PATH"
+          cp "$APK_PATH" WalkTalk-release.apk
+          echo "apk_path=WalkTalk-release.apk" >> $GITHUB_OUTPUT
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WalkTalk-release-apk
+          path: WalkTalk-release.apk
+          retention-days: 30
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v1.0.{0}', github.run_number) }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('WalkTalk Release v1.0.{0}', github.run_number) }}
+          body: |
+            ## WalkTalk Android APK Release 🎙️📱
+            
+            ### Included in this build:
+            - **Push-to-Talk Intercom**: True intercom audio playback directly through speakerphone.
+            - **Adaptive GPS Family Tracker**: Battery-efficient location state machine.
+            - **Hybrid Connection Support**: Local LAN mDNS, Cloudflare Quick Tunnel, and Firebase RTDB fallback.
+            - **Emergency SOS Alert**: High-priority alarm that bypasses Do Not Disturb.
+            
+            ### Installation:
+            1. Download `WalkTalk-release.apk` below to your Android device.
+            2. Tap to install (enable "Install from unknown sources" if prompted).
+          files: WalkTalk-release.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
