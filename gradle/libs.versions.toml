@@ -7,7 +7,7 @@ activityCompose = "1.9.3"
 composeBom = "2024.11.00"
 googleServices = "4.4.2"
 firebaseBom = "33.7.0"
-webrtc = "1.0.32007"
+webrtc = "144.7559.09"
 playServicesLocation = "21.3.0"
 mapsCompose = "6.2.1"
 playServicesMaps = "19.0.0"
@@ -36,7 +36,7 @@ firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" 
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx" }
 
 # WebRTC
-webrtc = { group = "org.webrtc", name = "google-webrtc", version.ref = "webrtc" }
+webrtc = { group = "io.github.webrtc-sdk", name = "android", version.ref = "webrtc" }
 
 # Location & Maps
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
