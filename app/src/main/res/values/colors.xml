@@ -1,0 +1,13 @@
+<resources>
+    <color name="primary">#00E676</color>
+    <color name="primary_dark">#00B0FF</color>
+    <color name="background_dark">#121212</color>
+    <color name="surface_dark">#1E1E1E</color>
+    <color name="ptt_active">#00E676</color>
+    <color name="ptt_inactive">#2C3E50</color>
+    <color name="sos_red">#FF1744</color>
+    <color name="status_available">#00E676</color>
+    <color name="status_reachable">#FFD600</color>
+    <color name="status_dnd">#FF5252</color>
+    <color name="status_offline">#757575</color>
+</resources>

@@ -1,0 +1,24 @@
+# Android / Gradle
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.aab
+
+# Node / Server
+/server/node_modules/
+/server/logs/
+/server/.env
+/server/serviceAccountKey.json
+
+# Windows
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini

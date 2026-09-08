@@ -1,0 +1,35 @@
+{
+  "rules": {
+    "families": {
+      "$familyId": {
+        // Read and write scoped to members of the family
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "members": {
+          "$deviceId": {
+            ".validate": "newData.hasChildren(['name', 'fcmToken', 'role'])"
+          }
+        },
+        "presence": {
+          "$deviceId": {
+            ".validate": "newData.hasChildren(['online', 'lastSeen'])"
+          }
+        },
+        "server_url": {
+          ".read": true,
+          ".write": "auth != null || auth.uid == null"
+        },
+        "live_locations": {
+          "$deviceId": {
+            ".validate": "newData.hasChildren(['lat', 'lng', 'timestamp'])"
+          }
+        },
+        "call_requests": {
+          "$callId": {
+            ".validate": "newData.hasChildren(['callerId', 'targetId'])"
+          }
+        }
+      }
+    }
+  }
+}

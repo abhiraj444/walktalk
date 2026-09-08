@@ -1,0 +1,16 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.WalkTalk" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#121212</item>
+        <item name="android:navigationBarColor">#121212</item>
+        <item name="android:windowBackground">#121212</item>
+    </style>
+
+    <!-- Fullscreen Incoming Call Lock-screen Theme -->
+    <style name="Theme.WalkTalk.Fullscreen" parent="Theme.WalkTalk">
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowBackground">#121212</item>
+        <item name="android:showWhenLocked">true</item>
+        <item name="android:turnScreenOn">true</item>
+    </style>
+</resources>

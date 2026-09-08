@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">WalkTalk</string>
+    <string name="intercom_title">WalkTalk Intercom</string>
+    <string name="hold_to_talk">HOLD TO TALK</string>
+    <string name="release_to_listen">RELEASE TO LISTEN</string>
+    <string name="transmitting">TRANSMITTING...</string>
+    <string name="receiving">RECEIVING AUDIO...</string>
+    <string name="everyone_broadcast">📢 Everyone</string>
+    <string name="sos_emergency">SOS EMERGENCY</string>
+    <string name="lock_hands_free">Lock Hands-Free</string>
+    <string name="quick_reaction_ok">OK</string>
+    <string name="quick_reaction_coming">Coming!</string>
+    <string name="quick_reaction_busy">Busy</string>
+</resources>
