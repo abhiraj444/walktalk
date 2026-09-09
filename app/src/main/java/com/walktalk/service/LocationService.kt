@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.walktalk.MainActivity
+import com.walktalk.R
 import com.walktalk.data.firebase.LocationRepository
 import com.walktalk.data.location.LocationTracker
 import com.walktalk.util.Constants
