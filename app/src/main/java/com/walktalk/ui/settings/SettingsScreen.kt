@@ -54,13 +54,17 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Select how the app reaches your home server behind CGNAT:",
+                        text = "Choose your signaling and communication infrastructure:",
                         color = Color.Gray,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val modes = listOf("Hybrid (Auto)", "Local LAN Only", "Cloud Only")
+                    val modes = listOf(
+                        "Firebase Cloud (No PC Needed)",
+                        "Hybrid (Auto - Use PC if On)",
+                        "Local LAN Only (Home Wi-Fi PC)"
+                    )
                     modes.forEach { mode ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -74,7 +78,15 @@ fun SettingsScreen(
                                 colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00E676))
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = mode, color = Color.White)
+                            Column {
+                                Text(text = mode, color = Color.White, fontWeight = FontWeight.SemiBold)
+                                val subtitle = when (mode) {
+                                    "Firebase Cloud (No PC Needed)" -> "100% serverless cloud. Zero computers required."
+                                    "Hybrid (Auto - Use PC if On)" -> "Uses local PC / Cloudflare Tunnel if running, else Firebase."
+                                    else -> "Connects strictly to your local PC on home Wi-Fi."
+                                }
+                                Text(text = subtitle, color = Color.Gray, fontSize = 11.sp)
+                            }
                         }
                     }
 

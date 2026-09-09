@@ -5,6 +5,9 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
 import com.google.firebase.database.FirebaseDatabase
+import com.walktalk.data.firebase.FirebaseSignalingClient
+import com.walktalk.data.signaling.SignalingChannel
+import com.walktalk.data.signaling.SignalingListener
 import com.walktalk.util.Constants
 import kotlinx.coroutines.*
 import java.net.URI
@@ -13,28 +16,55 @@ class ConnectionManager(
     private val context: Context,
     private val familyId: String,
     private val deviceId: String,
-    private val onConnectionReady: (SignalingClient) -> Unit,
-    private val onFallbackToRtdb: () -> Unit
+    private val listener: SignalingListener,
+    private val onChannelChanged: (SignalingChannel, String) -> Unit
 ) {
 
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
-    private var signalingClient: SignalingClient? = null
+    private var webSocketClient: SignalingClient? = null
+    private var firebaseClient: FirebaseSignalingClient? = null
+    private var activeChannel: SignalingChannel? = null
     private var isDiscovered = false
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     enum class Mode {
-        HYBRID,
-        LOCAL_ONLY,
-        CLOUD_ONLY
+        FIREBASE_SERVERLESS, // 100% Cloud - No local PC needed (Default)
+        HYBRID,              // Auto: Checks for Local PC, falls back to Firebase
+        LOCAL_ONLY           // Local PC on Home Wi-Fi only
     }
 
-    fun start(mode: Mode = Mode.HYBRID) {
+    private var currentMode: Mode = Mode.FIREBASE_SERVERLESS
+
+    fun start(mode: Mode = Mode.FIREBASE_SERVERLESS) {
+        currentMode = mode
+
+        // Always initialize Firebase serverless client so the app works immediately with NO PC required
+        if (firebaseClient == null) {
+            firebaseClient = FirebaseSignalingClient(familyId, deviceId, listener)
+        }
+
         when (mode) {
-            Mode.LOCAL_ONLY -> discoverLocalServer()
-            Mode.CLOUD_ONLY -> resolveCloudTunnelUrl()
+            Mode.FIREBASE_SERVERLESS -> {
+                Log.d("ConnectionManager", "Running in 100% Serverless Cloud Mode (No PC required)")
+                firebaseClient?.connect()
+                activeChannel = firebaseClient
+                activeChannel?.let { onChannelChanged(it, "Firebase Cloud (No PC Needed)") }
+            }
+
             Mode.HYBRID -> {
-                // Discover local server with a 1.5s timeout, then fallback to Cloudflare Tunnel
+                Log.d("ConnectionManager", "Running in Hybrid Auto Mode: Activating Firebase + probing for PC...")
+                // Start Firebase immediately so communication works without waiting
+                firebaseClient?.connect()
+                activeChannel = firebaseClient
+                activeChannel?.let { onChannelChanged(it, "Firebase Cloud (Active)") }
+
+                // Probe local network with a 1.5s timeout; if PC is on, upgrade to WebSocket
                 discoverLocalServerWithTimeout(1500L)
+            }
+
+            Mode.LOCAL_ONLY -> {
+                Log.d("ConnectionManager", "Running in Local LAN Only Mode")
+                discoverLocalServer()
             }
         }
     }
@@ -45,7 +75,7 @@ class ConnectionManager(
         scope.launch {
             delay(timeoutMs)
             if (!isDiscovered) {
-                Log.d("ConnectionManager", "Local mDNS discovery timed out. Falling back to Cloudflare Tunnel...")
+                Log.d("ConnectionManager", "No local PC found on LAN. Probing Cloudflare Tunnel URL...")
                 stopDiscovery()
                 resolveCloudTunnelUrl()
             }
@@ -57,7 +87,7 @@ class ConnectionManager(
         val discoveryListener = object : NsdManager.DiscoveryListener {
             override fun onServiceFound(serviceInfo: NsdServiceInfo) {
                 if (serviceInfo.serviceType.contains("walktalk") || serviceInfo.serviceName.contains("WalkTalk")) {
-                    Log.d("ConnectionManager", "WalkTalk mDNS service found: ${serviceInfo.serviceName}")
+                    Log.d("ConnectionManager", "WalkTalk PC found on LAN via mDNS: ${serviceInfo.serviceName}")
                     nsdManager.resolveService(serviceInfo, object : NsdManager.ResolveListener {
                         override fun onServiceResolved(resolved: NsdServiceInfo) {
                             if (isDiscovered) return
@@ -65,8 +95,8 @@ class ConnectionManager(
                             val host = resolved.host.hostAddress ?: "127.0.0.1"
                             val port = resolved.port
                             val uri = URI("ws://$host:$port")
-                            Log.d("ConnectionManager", "Resolved local server at: $uri")
-                            connectSignalingClient(uri)
+                            Log.d("ConnectionManager", "Resolved local PC server at: $uri")
+                            connectWebSocketClient(uri, "Local PC (Home LAN)")
                         }
 
                         override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
@@ -84,11 +114,17 @@ class ConnectionManager(
 
             override fun onServiceLost(serviceInfo: NsdServiceInfo) {
                 Log.d("ConnectionManager", "mDNS service lost: ${serviceInfo.serviceName}")
+                // If local PC drops, seamlessly revert to Firebase
+                if (currentMode == Mode.HYBRID) {
+                    activeChannel = firebaseClient
+                    activeChannel?.let { onChannelChanged(it, "Firebase Cloud (PC Offline)") }
+                }
             }
 
             override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
                 nsdManager.stopServiceDiscovery(this)
             }
+
             override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {
                 nsdManager.stopServiceDiscovery(this)
             }
@@ -97,13 +133,15 @@ class ConnectionManager(
         try {
             nsdManager.discoverServices(Constants.MDNS_SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
         } catch (e: Exception) {
-            Log.e("ConnectionManager", "Failed to start service discovery: ${e.message}")
-            resolveCloudTunnelUrl()
+            Log.e("ConnectionManager", "Service discovery error: ${e.message}")
+            if (currentMode == Mode.HYBRID) {
+                resolveCloudTunnelUrl()
+            }
         }
     }
 
     private fun stopDiscovery() {
-        // Safe discovery stop
+        // Safe discovery teardown
     }
 
     private fun resolveCloudTunnelUrl() {
@@ -113,50 +151,42 @@ class ConnectionManager(
                 val urlString = snapshot.child("url").getValue(String::class.java)
                 if (!urlString.isNullOrEmpty()) {
                     val wssUrl = urlString.replace("https://", "wss://").replace("http://", "ws://")
-                    Log.d("ConnectionManager", "Resolved Cloudflare Tunnel URL from RTDB: $wssUrl")
-                    connectSignalingClient(URI(wssUrl))
+                    Log.d("ConnectionManager", "Found Cloudflare Tunnel for PC: $wssUrl")
+                    connectWebSocketClient(URI(wssUrl), "Cloudflare Tunnel (PC)")
                 } else {
-                    Log.w("ConnectionManager", "No server_url found in RTDB. Using RTDB fallback signaling.")
-                    onFallbackToRtdb()
+                    Log.d("ConnectionManager", "No PC server URL in RTDB. Staying on Firebase Serverless.")
+                    activeChannel = firebaseClient
+                    activeChannel?.let { onChannelChanged(it, "Firebase Cloud (Serverless)") }
                 }
             }
             .addOnFailureListener {
-                Log.e("ConnectionManager", "Failed to read server_url from RTDB: ${it.message}")
-                onFallbackToRtdb()
+                Log.d("ConnectionManager", "RTDB server_url read failed. Staying on Firebase Serverless.")
+                activeChannel = firebaseClient
+                activeChannel?.let { onChannelChanged(it, "Firebase Cloud (Serverless)") }
             }
     }
 
-    private fun connectSignalingClient(uri: URI) {
-        signalingClient?.disconnect()
-        signalingClient = SignalingClient(
+    private fun connectWebSocketClient(uri: URI, statusLabel: String) {
+        webSocketClient?.disconnect()
+        webSocketClient = SignalingClient(
             serverUri = uri,
             familyId = familyId,
             deviceId = deviceId,
-            listener = object : SignalingClient.SignalingListener {
-                override fun onConnected() {
-                    Log.d("ConnectionManager", "Signaling client successfully connected!")
-                    signalingClient?.let { onConnectionReady(it) }
-                }
-
-                override fun onDisconnected() {
-                    Log.w("ConnectionManager", "Signaling client disconnected. Retrying...")
-                }
-
-                override fun onIceServersReceived(iceServers: List<org.webrtc.PeerConnection.IceServer>) {}
-                override fun onIncomingCall(callId: String, callerId: String, callerName: String, mode: String) {}
-                override fun onSdpOfferReceived(callId: String, senderId: String, sdp: org.webrtc.SessionDescription) {}
-                override fun onSdpAnswerReceived(callId: String, senderId: String, sdp: org.webrtc.SessionDescription) {}
-                override fun onIceCandidateReceived(callId: String, senderId: String, candidate: org.webrtc.IceCandidate) {}
-                override fun onFloorControl(action: String, senderId: String) {}
-                override fun onCallEnded(callId: String) {}
-            }
+            listener = listener
         )
-        signalingClient?.connect()
+        webSocketClient?.connect()
+        activeChannel = webSocketClient
+        activeChannel?.let { onChannelChanged(it, statusLabel) }
     }
+
+    fun getActiveChannel(): SignalingChannel? = activeChannel ?: firebaseClient
 
     fun destroy() {
         scope.cancel()
-        signalingClient?.disconnect()
-        signalingClient = null
+        webSocketClient?.disconnect()
+        webSocketClient = null
+        firebaseClient?.disconnect()
+        firebaseClient = null
+        activeChannel = null
     }
 }

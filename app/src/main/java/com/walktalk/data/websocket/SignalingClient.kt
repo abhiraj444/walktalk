@@ -10,29 +10,20 @@ import org.webrtc.PeerConnection
 import org.webrtc.SessionDescription
 import java.net.URI
 
+import com.walktalk.data.signaling.SignalingChannel
+import com.walktalk.data.signaling.SignalingListener
+
 class SignalingClient(
     private var serverUri: URI,
     private val familyId: String,
     private val deviceId: String,
     private val listener: SignalingListener
-) {
-
-    interface SignalingListener {
-        fun onConnected()
-        fun onDisconnected()
-        fun onIceServersReceived(iceServers: List<PeerConnection.IceServer>)
-        fun onIncomingCall(callId: String, callerId: String, callerName: String, mode: String)
-        fun onSdpOfferReceived(callId: String, senderId: String, sdp: SessionDescription)
-        fun onSdpAnswerReceived(callId: String, senderId: String, sdp: SessionDescription)
-        fun onIceCandidateReceived(callId: String, senderId: String, candidate: IceCandidate)
-        fun onFloorControl(action: String, senderId: String)
-        fun onCallEnded(callId: String)
-    }
+) : SignalingChannel {
 
     private var client: WebSocketClient? = null
     private var isIntentionalClose = false
 
-    fun connect() {
+    override fun connect() {
         isIntentionalClose = false
         try {
             client = object : WebSocketClient(serverUri) {
@@ -75,15 +66,15 @@ class SignalingClient(
         connect()
     }
 
-    fun disconnect() {
+    override fun disconnect() {
         isIntentionalClose = true
         client?.close()
         client = null
     }
 
-    fun isConnected(): Boolean = client?.isOpen == true
+    override fun isConnected(): Boolean = client?.isOpen == true
 
-    fun sendCallRequest(targetId: String, callId: String, callerName: String, mode: String = "ptt") {
+    override fun sendCallRequest(targetId: String, callId: String, callerName: String, mode: String) {
         val json = JSONObject().apply {
             put("type", "call_request")
             put("familyId", familyId)
@@ -95,7 +86,7 @@ class SignalingClient(
         send(json)
     }
 
-    fun sendSdpOffer(targetId: String, callId: String, sdp: SessionDescription) {
+    override fun sendSdpOffer(targetId: String, callId: String, sdp: SessionDescription) {
         val json = JSONObject().apply {
             put("type", "sdp_offer")
             put("familyId", familyId)
@@ -106,7 +97,7 @@ class SignalingClient(
         send(json)
     }
 
-    fun sendSdpAnswer(targetId: String, callId: String, sdp: SessionDescription) {
+    override fun sendSdpAnswer(targetId: String, callId: String, sdp: SessionDescription) {
         val json = JSONObject().apply {
             put("type", "sdp_answer")
             put("familyId", familyId)
@@ -117,7 +108,7 @@ class SignalingClient(
         send(json)
     }
 
-    fun sendIceCandidate(targetId: String, callId: String, candidate: IceCandidate) {
+    override fun sendIceCandidate(targetId: String, callId: String, candidate: IceCandidate) {
         val candidateJson = JSONObject().apply {
             put("sdpMid", candidate.sdpMid)
             put("sdpMLineIndex", candidate.sdpMLineIndex)
@@ -133,7 +124,7 @@ class SignalingClient(
         send(json)
     }
 
-    fun sendFloorControl(targetId: String, action: String) { // "take" or "release"
+    override fun sendFloorControl(targetId: String, action: String) { // "take" or "release"
         val json = JSONObject().apply {
             put("type", "floor_control")
             put("familyId", familyId)
@@ -143,7 +134,7 @@ class SignalingClient(
         send(json)
     }
 
-    fun sendEndCall(targetId: String, callId: String) {
+    override fun sendEndCall(targetId: String, callId: String) {
         val json = JSONObject().apply {
             put("type", "end_call")
             put("familyId", familyId)

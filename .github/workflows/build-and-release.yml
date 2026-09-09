@@ -63,15 +63,16 @@ jobs:
             ## WalkTalk Android APK Release 🎙️📱
             
             ### Which APK should I download?
-            - **`WalkTalk-arm64-v8a-release.apk` (Recommended ~14 MB)**: For all modern Android phones (Android 8.0+ / 64-bit).
-            - **`WalkTalk-universal-release.apk` (~28 MB)**: Universal build that runs on any Android device.
-            - **`WalkTalk-armeabi-v7a-release.apk`**: For older 32-bit Android phones.
+            - **`WalkTalk-arm64-v8a-release.apk` (~14.9 MB - Recommended)**: For all modern Android smartphones (arm64-v8a).
+            - **`WalkTalk-universal-release.apk` (~48.9 MB)**: Universal build that runs on any Android architecture.
+            - **`WalkTalk-armeabi-v7a-release.apk` (~9.9 MB)**: For older 32-bit Android phones.
             
-            ### Features:
-            - **Push-to-Talk Intercom**: True intercom audio playback directly through speakerphone.
-            - **Adaptive GPS Family Tracker**: Battery-efficient location state machine.
-            - **Hybrid Connection Support**: Local LAN mDNS, Cloudflare Quick Tunnel, and Firebase RTDB fallback.
-            - **Emergency SOS Alert**: High-priority alarm that bypasses Do Not Disturb.
+            ### What's New:
+            - **Serverless Cloud Mode (No PC Required)**: Full WebRTC signaling directly over Firebase Realtime Database. WalkTalk works anywhere with zero computer setup!
+            - **Hybrid Architecture Preserved**: Seamlessly upgrades to Local LAN or Cloudflare Tunnel if a local PC server is running.
+            - **Push-to-Talk Intercom**: True intercom audio playback directly through speakerphone with instant Opus-optimized audio.
+            - **Live GPS Family Map & SOS**: Background location updates and emergency family broadcast.
+            - **76% Smaller APK**: Optimized with R8 minification and ABI splits.
           files: release-apks/*.apk
           draft: false
           prerelease: false
