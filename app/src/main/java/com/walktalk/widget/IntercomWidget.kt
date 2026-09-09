@@ -19,6 +19,7 @@ import androidx.glance.layout.*
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
 
 class IntercomWidget : GlanceAppWidget() {
 
@@ -48,7 +49,7 @@ class IntercomWidget : GlanceAppWidget() {
                 Text(
                     text = "🎙️ WalkTalk Intercom",
                     style = TextStyle(
-                        color = Color.White,
+                        color = ColorProvider(Color.White),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )

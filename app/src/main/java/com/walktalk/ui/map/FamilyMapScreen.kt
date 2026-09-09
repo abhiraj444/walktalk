@@ -104,7 +104,7 @@ fun FamilyMapScreen(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = "${member.activity.capitalize()} • 🔋 ${member.battery}%",
+                            text = "${member.activity.replaceFirstChar { it.uppercase() }} • 🔋 ${member.battery}%",
                             color = Color.Gray,
                             fontSize = 12.sp
                         )

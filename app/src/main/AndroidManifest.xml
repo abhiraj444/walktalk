@@ -20,8 +20,6 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
-    <!-- Fallback SMS for SOS (Optional) -->
-    <uses-permission android:name="android.permission.SEND_SMS" tools:node="remove" />
 
     <!-- Android 13+ Notification -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

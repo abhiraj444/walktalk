@@ -177,7 +177,7 @@ fun FamilyMemberCard(member: MemberPresence, onClick: () -> Unit) {
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${member.status.capitalize()} • 🔋 ${member.battery}%",
+                        text = "${member.status.replaceFirstChar { it.uppercase() }} • 🔋 ${member.battery}%",
                         fontSize = 13.sp,
                         color = Color.Gray
                     )

@@ -81,6 +81,11 @@ class ConnectionManager(
             }
 
             override fun onDiscoveryStopped(serviceType: String) {}
+
+            override fun onServiceLost(serviceInfo: NsdServiceInfo) {
+                Log.d("ConnectionManager", "mDNS service lost: ${serviceInfo.serviceName}")
+            }
+
             override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
                 nsdManager.stopServiceDiscovery(this)
             }
