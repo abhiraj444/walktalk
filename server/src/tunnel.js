@@ -1,7 +1,17 @@
 const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 let tunnelProcess = null;
 let currentTunnelUrl = null;
+
+function getCloudflaredExecutable() {
+  const localExe = path.join(__dirname, '..', 'cloudflared.exe');
+  if (fs.existsSync(localExe)) {
+    return localExe;
+  }
+  return process.env.CLOUDFLARED_PATH || 'cloudflared';
+}
 
 /**
  * Start Cloudflare Quick Tunnel and extract the public trycloudflare.com URL
@@ -14,8 +24,8 @@ function startQuickTunnel(localPort = 8080, onUrlDiscovered) {
     return;
   }
 
-  const cloudflaredCmd = process.env.CLOUDFLARED_PATH || 'cloudflared';
-  console.log(`[Tunnel] Launching Cloudflare Quick Tunnel for port ${localPort}...`);
+  const cloudflaredCmd = getCloudflaredExecutable();
+  console.log(`[Tunnel] Launching Cloudflare Quick Tunnel for port ${localPort} using: ${cloudflaredCmd}`);
 
   try {
     tunnelProcess = spawn(cloudflaredCmd, [

@@ -17,6 +17,8 @@
 /server/logs/
 /server/.env
 /server/serviceAccountKey.json
+/server/cloudflared.exe
+*.exe
 
 # Windows
 Thumbs.db
