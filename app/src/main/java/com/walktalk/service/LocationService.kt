@@ -22,21 +22,29 @@ class LocationService : Service() {
         const val ACTION_STOP = "com.walktalk.location.STOP"
 
         fun start(context: Context) {
-            val intent = Intent(context, LocationService::class.java).apply {
-                action = ACTION_START
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+            try {
+                val intent = Intent(context, LocationService::class.java).apply {
+                    action = ACTION_START
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Throwable) {
+                android.util.Log.e("LocationService", "Failed to start location service: ${e.message}")
             }
         }
 
         fun stop(context: Context) {
-            val intent = Intent(context, LocationService::class.java).apply {
-                action = ACTION_STOP
+            try {
+                val intent = Intent(context, LocationService::class.java).apply {
+                    action = ACTION_STOP
+                }
+                context.startService(intent)
+            } catch (e: Throwable) {
+                android.util.Log.e("LocationService", "Failed to stop location service: ${e.message}")
             }
-            context.startService(intent)
         }
     }
 
@@ -68,22 +76,30 @@ class LocationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> {
-                val notification = buildLocationNotification()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    startForeground(
-                        NOTIFICATION_ID,
-                        notification,
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-                    )
-                } else {
-                    startForeground(NOTIFICATION_ID, notification)
+                try {
+                    val notification = buildLocationNotification()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        startForeground(
+                            NOTIFICATION_ID,
+                            notification,
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                        )
+                    } else {
+                        startForeground(NOTIFICATION_ID, notification)
+                    }
+                    locationTracker?.startTracking(LocationTracker.TrackingProfile.STATIONARY)
+                } catch (e: Throwable) {
+                    android.util.Log.e("LocationService", "startForeground error: ${e.message}")
                 }
-                locationTracker?.startTracking(LocationTracker.TrackingProfile.STATIONARY)
             }
             ACTION_STOP -> {
-                locationTracker?.stopTracking()
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
+                try {
+                    locationTracker?.stopTracking()
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                } catch (e: Throwable) {
+                    android.util.Log.e("LocationService", "stopForeground error: ${e.message}")
+                }
             }
         }
         return START_STICKY
@@ -101,7 +117,7 @@ class LocationService : Service() {
         return NotificationCompat.Builder(this, Constants.LOCATION_NOTIFICATION_CHANNEL_ID)
             .setContentTitle("WalkTalk Family Location")
             .setContentText("Sharing real-time status with family")
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setOngoing(true)
             .setContentIntent(pendingTapIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)

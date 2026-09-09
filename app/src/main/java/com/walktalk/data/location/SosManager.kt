@@ -12,7 +12,7 @@ class SosManager(
     private val deviceId: String
 ) {
 
-    private val db = FirebaseDatabase.getInstance().reference
+    private val db = com.walktalk.data.firebase.FirebaseHelper.getDatabase().reference
 
     fun triggerSos(
         senderName: String,

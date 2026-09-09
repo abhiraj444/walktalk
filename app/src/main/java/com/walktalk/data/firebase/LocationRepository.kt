@@ -27,7 +27,7 @@ class LocationRepository(
     private val deviceId: String
 ) {
 
-    private val db = FirebaseDatabase.getInstance().reference
+    private val db = FirebaseHelper.getDatabase().reference
     private val locationsRef = db.child("families").child(familyId).child("live_locations")
 
     fun updateMyLocation(

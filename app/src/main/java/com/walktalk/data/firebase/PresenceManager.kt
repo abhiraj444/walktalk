@@ -24,11 +24,11 @@ class PresenceManager(
     private val deviceId: String
 ) {
 
-    private val db = FirebaseDatabase.getInstance().reference
+    private val db = FirebaseHelper.getDatabase().reference
     private val presenceRef = db.child("families").child(familyId).child("presence").child(deviceId)
 
     fun startPresence(name: String, batteryLevel: Int = 100) {
-        val connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected")
+        val connectedRef = FirebaseHelper.getDatabase().getReference(".info/connected")
         connectedRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val connected = snapshot.getValue(Boolean::class.java) ?: false

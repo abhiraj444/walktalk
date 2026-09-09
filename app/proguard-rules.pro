@@ -27,3 +27,7 @@
 
 # Jetpack Glance
 -keep class androidx.glance.** { *; }
+
+# Keep all WalkTalk code
+-keep class com.walktalk.** { *; }
+-keep interface com.walktalk.** { *; }

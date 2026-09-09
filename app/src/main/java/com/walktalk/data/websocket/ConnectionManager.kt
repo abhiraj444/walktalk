@@ -145,7 +145,7 @@ class ConnectionManager(
     }
 
     private fun resolveCloudTunnelUrl() {
-        val rtdb = FirebaseDatabase.getInstance().reference
+        val rtdb = com.walktalk.data.firebase.FirebaseHelper.getDatabase().reference
         rtdb.child("families").child(familyId).child("server_url").get()
             .addOnSuccessListener { snapshot ->
                 val urlString = snapshot.child("url").getValue(String::class.java)

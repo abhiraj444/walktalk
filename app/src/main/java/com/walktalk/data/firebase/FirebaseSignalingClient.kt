@@ -14,7 +14,7 @@ class FirebaseSignalingClient(
     private val listener: SignalingListener
 ) : SignalingChannel {
 
-    private val db = FirebaseDatabase.getInstance().reference
+    private val db = FirebaseHelper.getDatabase().reference
     private val callsRef = db.child("families").child(familyId).child("calls")
     private var connectedListener: ValueEventListener? = null
     private var callsListener: ChildEventListener? = null
@@ -32,7 +32,7 @@ class FirebaseSignalingClient(
     }
 
     override fun connect() {
-        val connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected")
+        val connectedRef = FirebaseHelper.getDatabase().getReference(".info/connected")
         connectedListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val connected = snapshot.getValue(Boolean::class.java) ?: false
@@ -168,7 +168,7 @@ class FirebaseSignalingClient(
     override fun disconnect() {
         detachCallDetailListener()
         connectedListener?.let {
-            FirebaseDatabase.getInstance().getReference(".info/connected").removeEventListener(it)
+            FirebaseHelper.getDatabase().getReference(".info/connected").removeEventListener(it)
         }
         callsListener?.let {
             callsRef.removeEventListener(it)

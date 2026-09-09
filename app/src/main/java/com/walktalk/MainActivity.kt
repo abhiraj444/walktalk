@@ -67,7 +67,11 @@ class MainActivity : ComponentActivity(), SignalingListener {
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
-            LocationService.start(this)
+            try {
+                LocationService.start(this)
+            } catch (e: Throwable) {
+                Log.e("MainActivity", "Error starting LocationService: ${e.message}")
+            }
         }
     }
 
@@ -278,7 +282,11 @@ class MainActivity : ComponentActivity(), SignalingListener {
         if (missing.isNotEmpty()) {
             permissionLauncher.launch(missing.toTypedArray())
         } else {
-            LocationService.start(this)
+            try {
+                LocationService.start(this)
+            } catch (e: Throwable) {
+                Log.e("MainActivity", "Error starting LocationService: ${e.message}")
+            }
         }
     }
 

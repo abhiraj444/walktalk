@@ -27,7 +27,19 @@ class WalkTalkApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        audioFeedback = AudioFeedback(this)
+
+        // Safe global exception logger
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            android.util.Log.e("WalkTalkApp", "Uncaught exception on thread ${thread.name}: ${throwable.message}", throwable)
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
+
+        try {
+            audioFeedback = AudioFeedback(this)
+        } catch (t: Throwable) {
+            android.util.Log.e("WalkTalkApp", "AudioFeedback init error: ${t.message}")
+        }
 
         // 1. Pre-warm WebRTC native libraries and PeerConnectionFactory
         initializeWebRtc()
@@ -48,8 +60,8 @@ class WalkTalkApp : Application() {
                 cachedCertificate = RtcCertificatePem.generateCertificate(
                     org.webrtc.PeerConnection.KeyType.ECDSA
                 )
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (t: Throwable) {
+                android.util.Log.e("WalkTalkApp", "WebRTC init warning: ${t.message}")
             }
         }.start()
     }

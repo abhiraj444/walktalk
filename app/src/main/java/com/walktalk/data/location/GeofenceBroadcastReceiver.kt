@@ -32,7 +32,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         val familyId = prefs.getString(Constants.KEY_FAMILY_ID, Constants.DEFAULT_FAMILY_ID) ?: Constants.DEFAULT_FAMILY_ID
         val deviceId = prefs.getString(Constants.KEY_DEVICE_ID, "unknown") ?: "unknown"
 
-        val db = FirebaseDatabase.getInstance().reference
+        val db = com.walktalk.data.firebase.FirebaseHelper.getDatabase().reference
 
         for (geofence in triggeringGeofences) {
             val fenceId = geofence.requestId
