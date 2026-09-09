@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "123456789012",
-    "project_id": "walktalk-build-placeholder",
-    "storage_bucket": "walktalk-build-placeholder.appspot.com"
+    "project_number": "910199728143",
+    "firebase_url": "https://walkietalkie-462a2-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "walkietalkie-462a2",
+    "storage_bucket": "walkietalkie-462a2.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789012:android:abcdef0123456789",
+        "mobilesdk_app_id": "1:910199728143:android:ebd3f96e90a5a2e835db7a",
         "android_client_info": {
           "package_name": "com.walktalk"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDummyKeyForBuildVerification123456"
+          "current_key": "AIzaSyC7UEAcS0zrWNGeuAF7o73NngQcgs4WHpQ"
         }
       ],
       "services": {
